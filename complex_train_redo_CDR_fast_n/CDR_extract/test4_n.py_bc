@@ -1,0 +1,101 @@
+from anarci import anarci, number
+from Bio import SeqIO
+import os
+import sys
+import pandas as pd
+
+# 定义固定的长度
+fixed_lengths = {
+    'cdr1_aa_light': 10,
+    'cdr2_aa_light': 10,
+    'cdr3_aa_light': 25,
+    'cdr1_aa_heavy': 10,
+    'cdr2_aa_heavy': 10,
+    'cdr3_aa_heavy': 25
+}
+
+# 读取 FASTA 文件
+fasta_file = sys.argv[1]
+sequences = []
+for record in SeqIO.parse(fasta_file, "fasta"):
+    id = record.id
+    seq = str(record.seq)
+    sequences.append((id, seq))
+
+# Hand the list of sequences to the anarci function. Number them with the IMGT scheme
+results = anarci(sequences, scheme="imgt", output=False)
+
+# Unpack the results. We get three lists
+numbering, alignment_details, hit_tables = results
+
+# Each has the same number of elements as the number of sequences submitted
+assert len(numbering) == len(alignment_details) == len(hit_tables) == len(sequences)
+
+# 定义 CDR 位置
+cdr_positions = {
+    'cdr1_aa_light': (27, 38),
+    'cdr2_aa_light': (56, 65),
+    'cdr3_aa_light': (105, 117),
+    'cdr1_aa_heavy': (27, 38),
+    'cdr2_aa_heavy': (56, 65),
+    'cdr3_aa_heavy': (105, 117)
+}
+
+# 初始化一个空列表来存储所有序列的 CDR 区域
+all_cdr_regions = []
+
+# 遍历每个序列
+for i in range(len(sequences)):
+    if numbering[i] is None:
+        print('ANARCI did not number', sequences[i][0])
+        cdr_regions = {cdr: "" for cdr in cdr_positions.keys()}  # 如果未编号，所有 CDR 区域为空字符串
+    else:
+        print('ANARCI numbered', sequences[i][0])
+        print('It identified %d domain(s)' % len(numbering[i]))
+
+        # 初始化 CDR 区域字典
+        cdr_regions = {cdr: "" for cdr in cdr_positions.keys()}
+
+        # 遍历每个域
+        for j in range(len(numbering[i])):
+            domain_numbering, start_index, end_index = numbering[i][j]
+
+            # 提取 CDR 区域
+            for cdr, (start, end) in cdr_positions.items():
+                if domain_numbering[start] is not None:
+                    cdr_sequence = ''.join([domain_numbering[k][1] for k in range(start, end + 1) if domain_numbering[k] is not None])
+                    print (cdr_sequence)
+                    cdr_regions[cdr] = cdr_sequence.replace('-','')
+
+        print('Extracted CDR regions:')
+        for cdr, seq in cdr_regions.items():
+            print(f"{cdr}: {seq}")
+
+    # 将提取的 CDR 区域添加到列表中
+    all_cdr_regions.append(cdr_regions)
+
+
+print (all_cdr_regions)
+# 将列表转换为 DataFrame
+combined_df = pd.DataFrame(all_cdr_regions)
+
+# 将 NaN 值替换为空字符串
+combined_df = combined_df.fillna("")
+
+# 截断或填充序列以达到固定的长度
+for col, length in fixed_lengths.items():
+    combined_df[col] = combined_df[col].apply(lambda seq: seq[:length].ljust(length, 'X'))
+
+# 组合序列并用 "XXXX" 分隔
+combined_df['combined_sequence'] = combined_df[cdr_positions.keys()].apply(lambda row: 'X'.join(row), axis=1)
+
+# 显示结果
+print(combined_df['combined_sequence'])
+
+# 如果需要，可以将结果保存到新的文件中
+combined_df['combined_sequence'].to_csv("extracted_data_with_combined_sequences_fixed_length.txt", index=False)
+
+print('\n', '_' * 40)
+print('Combined CDR sequences have been saved to "extracted_data_with_combined_sequences_fixed_length.txt"')
+
+
