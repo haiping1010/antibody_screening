@@ -5,13 +5,13 @@
 
 bash  run_batch1.bash  (runing docking)
 
-## The folder design_new_antibody_activin/complex_train_redo_structure_based_reduce_usage_activin :   complex structure based antibody-antigen binding prediction
+## The folder design_new_antibody_activin/complex_train_redo_structure_based_reduce_usage_activin :   complex structure based antibody-antigen binding prediction (Sgraph_Anti)
 
 bash run_all_pos.bash  (preparation input graph data)
 
 bash run_all_pred.bash  (running)
 
-## The folder design_new_antibody_activin/complex_train_redo_usage_activin:   non-complex structure based antibody-antigen binding prediction
+## The folder design_new_antibody_activin/complex_train_redo_usage_activin:   non-complex structure based antibody-antigen binding prediction  (DeepGCN_Anti)
 
 bash run_all_pos.bash  (preparation input graph data)
 
@@ -39,6 +39,6 @@ bash run_all_predict.bash (running)
 
 
 
-The DeepGCN_Anti code is in https://github.com/haiping1010/DeepGCN_Anti;
+The DeepGCN_Anti code can also be found in https://github.com/haiping1010/DeepGCN_Anti;
 
 
