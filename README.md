@@ -37,3 +37,8 @@ bash run_all_pos.bash  (preparation input graph data)
 
 bash run_all_predict.bash (running)
 
+
+
+The DeepGCN_Anti code is in https://github.com/haiping1010/DeepGCN_Anti;
+
+
